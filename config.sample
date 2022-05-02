@@ -1,0 +1,11 @@
+[DEFAULT]
+test_mode = True
+email_age_days = 730
+min_size_MB = 5
+standard_folder = INBOX
+otherFolderRenameThis = "[Gmail]/Sent Mail"
+
+[mailserver]
+server = mailserver
+user = account
+password = password
