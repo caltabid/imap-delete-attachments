@@ -32,9 +32,10 @@ with MailBox(server).login(user, password) as mailbox:
     # msg_uids = mailbox.uids(A(size_gt=min_size, date_lt=max_date))
     progress = 0
     processed = 1
+    multiplier = 16
     while processed:
         processed = 0
-        msgs = mailbox.fetch(A(size_gt=min_size, date_lt=max_date), limit=1)
+        msgs = mailbox.fetch(A(size_gt=(multiplier*min_size), date_lt=max_date), limit=1)
         for msg in msgs:
             processed = 1
             progress += 1
@@ -63,3 +64,6 @@ with MailBox(server).login(user, password) as mailbox:
                 encoded_message = str(new_message).encode("utf-8")
                 mailbox.client.append(standard_folder, imap_tools.MailMessageFlags.SEEN, msg.date, encoded_message)
                 mailbox.move(msg.uid, '[Gmail]/Bin')
+        if not processed and multiplier > 1:
+            multiplier = int(multiplier/2)
+            processed = 1
