@@ -5,6 +5,7 @@ import imap_tools
 from imap_tools import MailBox, A
 import configparser
 import time
+from bs4 import BeautifulSoup, Tag, NavigableString
 
 config = configparser.ConfigParser()
 config.sections()
@@ -42,13 +43,22 @@ with MailBox(server).login(user, password) as mailbox:
                 new_message = email.message.EmailMessage()
                 new_message["From"] = msg.from_
                 new_message["To"] = msg.to
+                new_message["Cc"] = msg.cc
+                new_message["Bcc"] = msg.bcc
                 new_message["Subject"] = msg.subject.replace('\r\n', '')
                 Str = "This message contained followed attachments that have been stripped out:\r\n"
                 for att in msg.attachments:
                     Str += "F: " + att.filename + "; S: " + str(att.size) + "B\r\n"
-                Str += "Original message is:\r\n****************************\r\n\r\n" + msg.text
-                new_message.set_payload(Str)
-                # Fix special characters by setting the same encoding we'll use later to encode the message
+                Str += "Original message is:\r\n****************************\r\n\r\n"
+                if msg.html.__len__() > 10:
+                    soup = BeautifulSoup(msg.html, features="html.parser")
+                    if soup.body:
+                        MsgText = soup.body.get_text()
+                    else:
+                        MsgText = soup.get_text()
+                else:
+                    MsgText = msg.text
+                new_message.set_payload(Str + MsgText)
                 new_message.set_charset(email.charset.Charset("utf-8"))
                 encoded_message = str(new_message).encode("utf-8")
                 mailbox.client.append(standard_folder, imap_tools.MailMessageFlags.SEEN, msg.date, encoded_message)
